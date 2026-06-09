@@ -51,48 +51,66 @@ st.markdown("""
         color: #ffffff;
     }
     
-    /* Target Streamlit chat message containers and override styling */
-    .stChatMessage {
-        border-radius: 18px !important;
-        margin-bottom: 16px !important;
-        padding: 16px 20px !important;
-        border: none !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        max-width: 85%;
+    /* --- CUSTOM HIGH-FIDELITY CHAT CONTAINER & BUBBLES --- */
+    .chat-container-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin-bottom: 20px;
     }
     
-    /* User chat bubble: Champagne-Gold gradient with dark text */
-    .stChatMessage[data-testid="stChatMessageUser"] {
-        background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%) !important;
-        border-top-right-radius: 4px !important;
-        float: right !important;
-        clear: both;
-    }
-    .stChatMessage[data-testid="stChatMessageUser"] * {
-        color: #0d0d0f !important;
-        font-weight: 500 !important;
+    .msg-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        max-width: 80%;
     }
     
-    /* Assistant chat bubble: Charcoal background with soft white text */
-    .stChatMessage[data-testid="stChatMessageAssistant"] {
-        background-color: #1e1e21 !important;
-        border-top-left-radius: 4px !important;
-        float: left !important;
-        clear: both;
-    }
-    .stChatMessage[data-testid="stChatMessageAssistant"] * {
-        color: #eaeaea !important;
+    .msg-row.bot {
+        align-self: flex-start;
     }
     
-    /* Custom CSS to format the circular gold letter avatar icons */
-    div[data-testid="chatAvatarIcon-user"] {
-        background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%) !important;
-        color: #0d0d0f !important;
+    .msg-row.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
     }
-    div[data-testid="chatAvatarIcon-assistant"] {
-        background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%) !important;
-        color: #0d0d0f !important;
-        box-shadow: 0 0 10px rgba(223, 186, 107, 0.3) !important;
+    
+    .msg-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%);
+        color: #0d0d0f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+        box-shadow: 0 0 12px rgba(223, 186, 107, 0.35);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    
+    .msg-bubble {
+        padding: 14px 18px;
+        border-radius: 18px;
+        font-size: 14.5px;
+        line-height: 1.55;
+    }
+    
+    .msg-row.bot .msg-bubble {
+        background-color: #1e1e21;
+        border: 1px solid rgba(223, 186, 107, 0.06);
+        color: #eaeaea;
+        border-top-left-radius: 4px;
+    }
+    
+    .msg-row.user .msg-bubble {
+        background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%);
+        color: #0d0d0f;
+        border-top-right-radius: 4px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
     /* Custom styles for sidebar elements specifically */
@@ -432,7 +450,7 @@ else:
 st.markdown("""
     <div class="chat-header-bar">
         <span class="chat-header-title">Investment Strategy Discussion</span>
-        <div style="display: flex; gap: 16px; color: #8e887d;">
+        <div style="display: flex; gap: 16px; color: #8e887d; font-size: 18px;">
             <span style="cursor: pointer;">💬</span>
             <span style="cursor: pointer;">•••</span>
         </div>
@@ -441,28 +459,28 @@ st.markdown("""
 
 # Initialize conversation history in Session State
 if "messages" not in st.session_state:
-    # Pre-populate with a greeting matching the mock sequence if empty
     st.session_state.messages = [
         {"role": "assistant", "content": "Hello Vaishnavi! I've analyzed your portfolio against the current market data. Here are tailored insights... Would you like to review specific sectors or risk adjustments?"}
     ]
 
-# Display conversation history
-for idx, msg in enumerate(st.session_state.messages):
-    with st.chat_message(msg["role"]):
-        st.write(msg["content"])
-        
-        # Add feedback logging buttons to Assistant messages
-        if msg["role"] == "assistant" and idx > 0:
-            if idx == len(st.session_state.messages) - 1:
-                col_f1, col_f2, col_f3 = st.columns([0.05, 0.05, 0.9])
-                with col_f1:
-                    if st.button("👍", key=f"up_{idx}"):
-                        log_feedback(st.session_state.messages[idx-1]["content"], msg["content"], 5)
-                        st.toast("Feedback logged!", icon="✨")
-                with col_f2:
-                    if st.button("👎", key=f"down_{idx}"):
-                        log_feedback(st.session_state.messages[idx-1]["content"], msg["content"], 1)
-                        st.toast("Feedback logged!", icon="📝")
+# Render chat history utilizing high-fidelity custom HTML design bubbles
+chat_html = ""
+for msg in st.session_state.messages:
+    if msg["role"] == "assistant":
+        chat_html += f"""
+        <div class="msg-row bot">
+            <div class="msg-avatar">F</div>
+            <div class="msg-bubble">{msg["content"]}</div>
+        </div>
+        """
+    else:
+        chat_html += f"""
+        <div class="msg-row user">
+            <div class="msg-bubble">{msg["content"]}</div>
+        </div>
+        """
+
+st.markdown(f'<div class="chat-container-custom">{chat_html}</div>', unsafe_allow_html=True)
 
 # Feedback logging function
 def log_feedback(query, response, score):
@@ -474,8 +492,20 @@ def log_feedback(query, response, score):
             writer.writerow(["Timestamp", "User Query", "Bot Response", "Score (1-5)"])
         writer.writerow([datetime.now().strftime("%Y-%m-%d %H:%M:%S"), query, response, score])
 
+# Floating feedback triggers directly under the last bot message
+if len(st.session_state.messages) > 1 and st.session_state.messages[-1]["role"] == "assistant":
+    col_f1, col_f2, col_f3 = st.columns([0.05, 0.05, 0.9])
+    with col_f1:
+        if st.button("👍", key="up_feedback_main"):
+            log_feedback(st.session_state.messages[-2]["content"], st.session_state.messages[-1]["content"], 5)
+            st.toast("Feedback logged!", icon="✨")
+    with col_f2:
+        if st.button("👎", key="down_feedback_main"):
+            log_feedback(st.session_state.messages[-2]["content"], st.session_state.messages[-1]["content"], 1)
+            st.toast("Feedback logged!", icon="📝")
+
 # Suggested Topic Chips container aligned on bottom right
-st.markdown("<div style='margin-top: 16px; margin-bottom: 8px; font-size:11px; color:#8e887d; font-weight:700; letter-spacing:1px; text-transform:uppercase;'>Action Presets</div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 24px; margin-bottom: 8px; font-size:11px; color:#8e887d; font-weight:700; letter-spacing:1px; text-transform:uppercase;'>Action Presets</div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3 = st.columns(3)
 
 with col_chip1:
@@ -495,30 +525,24 @@ with col_chip3:
 user_query = st.chat_input("Ask FinanceGuru about your investments...")
 
 if user_query:
-    with st.chat_message("user"):
-        st.write(user_query)
-        
+    # Append user question
     st.session_state.messages.append({"role": "user", "content": user_query})
     
     if not model:
-        with st.chat_message("assistant"):
-            st.error("Please configure your Gemini API Key in the sidebar or .env file to activate the chatbot.")
+        st.error("Please configure your Gemini API Key in the sidebar or .env file to activate the chatbot.")
     else:
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing Market Insights..."):
-                try:
-                    chat = model.start_chat(history=[])
-                    history_contents = []
-                    for m in st.session_state.messages[:-1]:
-                        role_name = "user" if m["role"] == "user" else "model"
-                        history_contents.append({"role": role_name, "parts": [m["content"]]})
-                    chat.history = history_contents
-                    
-                    response = chat.send_message(user_query)
-                    bot_response = response.text
-                    st.write(bot_response)
-                    st.session_state.messages.append({"role": "assistant", "content": bot_response})
-                    st.rerun()
-                    
-                except Exception as e:
-                    st.error(f"Error calling Gemini API: {str(e)}")
+        try:
+            chat = model.start_chat(history=[])
+            history_contents = []
+            for m in st.session_state.messages[:-1]:
+                role_name = "user" if m["role"] == "user" else "model"
+                history_contents.append({"role": role_name, "parts": [m["content"]]})
+            chat.history = history_contents
+            
+            response = chat.send_message(user_query)
+            bot_response = response.text
+            st.session_state.messages.append({"role": "assistant", "content": bot_response})
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"Error calling Gemini API: {str(e)}")
