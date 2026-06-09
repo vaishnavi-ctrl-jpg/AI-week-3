@@ -8,20 +8,31 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Page configuration with premium layout set to wide for true mockup layout matching
+# Page configuration with premium layout: force sidebar to be open by default
 st.set_page_config(
     page_title="FinanceGuru - Investment Strategy & Tax Planning Portal",
     page_icon="💰",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # Custom premium CSS to match the high-fidelity FinanceGuru Luxury UI Colors palette
 st.markdown("""
 <style>
-    /* Hide default Streamlit header, footer, and borders for a clean white-label appearance */
+    /* Hide default Streamlit menus and footers but preserve the top header container for the sidebar toggle */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden; height: 0px !important;}
+    
+    /* Make the header bar transparent and click-through, but preserve the toggle button on the left */
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
+    }
+    
+    /* Hide top-right Streamlit developer toolbar buttons (Deploy, Settings, etc.) */
+    div[data-testid="stToolbar"] {
+        visibility: hidden !important;
+    }
+    
     .stDecoration {display: none !important;}
     
     /* Luxury dark background */
