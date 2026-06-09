@@ -354,7 +354,7 @@ with st.sidebar:
                 <div class="user-status-dot"></div>
             </div>
             <div class="profile-info">
-                <span class="profile-name">Alex R.</span>
+                <span class="profile-name">Vaishnavi</span>
                 <span class="profile-tier">Premium User</span>
             </div>
             <span class="profile-chevron">&gt;</span>
@@ -443,7 +443,7 @@ st.markdown("""
 if "messages" not in st.session_state:
     # Pre-populate with a greeting matching the mock sequence if empty
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hello Alex! I've analyzed your portfolio against the current market data. Here are tailored insights... Would you like to review specific sectors or risk adjustments?"}
+        {"role": "assistant", "content": "Hello Vaishnavi! I've analyzed your portfolio against the current market data. Here are tailored insights... Would you like to review specific sectors or risk adjustments?"}
     ]
 
 # Display conversation history
