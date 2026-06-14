@@ -339,6 +339,79 @@ st.markdown("""
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 12px rgba(223, 186, 107, 0.25) !important;
     }
+
+    /* Premium Logo & Text Shimmer Styles */
+    @keyframes spin-slow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse-gentle {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(223,186,107,0.3)); }
+        50% { transform: scale(1.04); filter: drop-shadow(0 0 10px rgba(223,186,107,0.6)); }
+    }
+    @keyframes node-pulse {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.4); opacity: 1; }
+    }
+    @keyframes line-draw {
+        0% { stroke-dasharray: 0 40; stroke-dashoffset: 0; }
+        50% { stroke-dasharray: 40 40; stroke-dashoffset: 0; }
+        100% { stroke-dasharray: 40 40; stroke-dashoffset: -40; }
+    }
+    @keyframes gold-shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+    }
+
+    .rotating-ring {
+        transform-origin: 20px 20px;
+        animation: spin-slow 25s linear infinite;
+    }
+    .premium-logo-svg {
+        animation: pulse-gentle 4s ease-in-out infinite;
+    }
+    .pulse-node-1 {
+        transform-origin: 13px 24px;
+        animation: node-pulse 2s infinite ease-in-out;
+    }
+    .pulse-node-2 {
+        transform-origin: 20px 18px;
+        animation: node-pulse 2s infinite ease-in-out 0.4s;
+    }
+    .pulse-node-3 {
+        transform-origin: 27px 14px;
+        animation: node-pulse 2s infinite ease-in-out 0.8s;
+    }
+    .draw-line {
+        stroke-dasharray: 40;
+        animation: line-draw 4s infinite ease-in-out;
+    }
+    .shimmer-text {
+        background: linear-gradient(90deg, #ffffff 0%, #dfba6b 25%, #f5e0a3 50%, #dfba6b 75%, #ffffff 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gold-shimmer 4s linear infinite;
+    }
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        margin-top: 5px;
+        padding: 8px 12px;
+        border-radius: 14px;
+        background: rgba(223, 186, 107, 0.02);
+        border: 1px solid rgba(223, 186, 107, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 0 12px rgba(223, 186, 107, 0.03);
+    }
+    .logo-container:hover {
+        background: rgba(223, 186, 107, 0.05);
+        border-color: rgba(223, 186, 107, 0.25);
+        box-shadow: 0 4px 20px rgba(223, 186, 107, 0.1), inset 0 0 16px rgba(223, 186, 107, 0.05);
+        transform: translateY(-1px);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -413,9 +486,33 @@ api_key = os.getenv("GEMINI_API_KEY")
 with st.sidebar:
     # Header Branding
     st.markdown("""
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #dfba6b 0%, #c5a059 100%); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #0d0d0f; font-size: 16px;">F</div>
-            <span style="font-size: 19px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">FinanceGuru</span>
+        <div class="logo-container">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="premium-logo-svg">
+              <defs>
+                <linearGradient id="gold-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#dfba6b" />
+                  <stop offset="50%" stop-color="#f5e0a3" />
+                  <stop offset="100%" stop-color="#c5a059" />
+                </linearGradient>
+                <linearGradient id="gold-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#dfba6b" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#c5a059" stop-opacity="0.1"/>
+                </linearGradient>
+              </defs>
+              <!-- Background Rotating Ring -->
+              <circle cx="20" cy="20" r="17" stroke="url(#gold-glow)" stroke-width="1.2" fill="none" stroke-dasharray="3 3" class="rotating-ring" />
+              <!-- Outer Hex Shield/Diamond -->
+              <path d="M20 4 L36 12 L36 28 L20 36 L4 28 L4 12 Z" stroke="url(#gold-grad-1)" stroke-width="1.8" fill="none" />
+              <!-- Inner geometric chart nodes and connecting line -->
+              <path d="M13 24 L20 18 L27 14" stroke="url(#gold-grad-1)" stroke-width="1.8" stroke-linecap="round" fill="none" class="draw-line" />
+              <circle cx="13" cy="24" r="2.5" fill="url(#gold-grad-1)" class="pulse-node-1" />
+              <circle cx="20" cy="18" r="2.5" fill="url(#gold-grad-1)" class="pulse-node-2" />
+              <circle cx="27" cy="14" r="2.5" fill="url(#gold-grad-1)" class="pulse-node-3" />
+            </svg>
+            <div style="display: flex; flex-direction: column;">
+                <span class="shimmer-text" style="font-size: 20px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.1;">FinanceGuru</span>
+                <span style="font-size: 8.5px; font-weight: 600; color: #8e887d; letter-spacing: 2px; text-transform: uppercase; margin-top: 1.5px;">Wealth Portal</span>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
