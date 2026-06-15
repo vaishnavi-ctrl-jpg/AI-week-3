@@ -1,5 +1,6 @@
 import os
 import csv
+import time
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -105,6 +106,8 @@ def main():
                     print(f"Querying Q#{q_id}: {q}")
                     response = model.generate_content(q)
                     response_text = response.text.strip()
+                    # Sleep 5 seconds to stay under the 15 RPM free-tier rate limit
+                    time.sleep(5)
                 except Exception as e:
                     response_text = f"API Error: {str(e)}"
                     print(f"Error querying Q#{q_id}: {e}")
