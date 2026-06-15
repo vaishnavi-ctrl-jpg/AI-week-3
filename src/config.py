@@ -1,3 +1,7 @@
+import warnings
+# Silence all FutureWarning warnings completely to ensure warning-free output
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import streamlit as st
 import google.generativeai as genai
 
@@ -42,9 +46,25 @@ def get_generative_model(api_key: str):
         return None
     try:
         genai.configure(api_key=api_key)
+        
+        # Configure model parameters for optimal precision and safety
+        generation_config = {
+            "temperature": 0.1,  # Low temperature makes tax/financial answers highly deterministic and reliable
+            "top_p": 0.95,
+        }
+        
+        safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+        ]
+        
         return genai.GenerativeModel(
             model_name="gemini-2.0-flash",
-            system_instruction=SYSTEM_PROMPT
+            system_instruction=SYSTEM_PROMPT,
+            generation_config=generation_config,
+            safety_settings=safety_settings
         )
     except Exception:
         return None
