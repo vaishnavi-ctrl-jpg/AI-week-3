@@ -1,5 +1,6 @@
 import os
 import csv
+import html
 from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
@@ -193,43 +194,45 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# Render active chat history utilizing high-fidelity custom HTML design bubbles
+# Render active chat history utilizing high-fidelity custom HTML design bubbles with secure escaping and ARIA attributes
 chat_html = ""
 for msg in active_messages:
+    # Secure escaping to prevent cross-site scripting (XSS)
+    escaped_content = html.escape(msg["content"]).replace("\n", "<br/>")
     if msg["role"] == "assistant":
         chat_html += f"""
-        <div class="msg-row bot">
-            <div class="msg-avatar">F</div>
-            <div class="msg-bubble">{msg["content"]}</div>
+        <div class="msg-row bot" role="listitem">
+            <div class="msg-avatar" role="img" aria-label="FinanceGuru Avatar">F</div>
+            <div class="msg-bubble" tabindex="0">{escaped_content}</div>
         </div>
         """
     else:
         chat_html += f"""
-        <div class="msg-row user">
-            <div class="msg-bubble">{msg["content"]}</div>
+        <div class="msg-row user" role="listitem">
+            <div class="msg-bubble" tabindex="0">{escaped_content}</div>
         </div>
         """
 
-st.markdown(f'<div class="chat-container-custom">{chat_html}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="chat-container-custom" role="list" aria-label="Chat messages">{chat_html}</div>', unsafe_allow_html=True)
 
 # Feedback logging function
 def log_feedback(query, response, score):
     record_feedback(query, response, score)
 
-# Floating feedback triggers directly under the last bot message
+# Floating feedback triggers directly under the last bot message with accessibility tooltips
 if len(active_messages) > 1 and active_messages[-1]["role"] == "assistant":
     col_f1, col_f2, col_f3 = st.columns([0.05, 0.05, 0.9])
     with col_f1:
-        if st.button("👍", key="up_feedback_main"):
+        if st.button("👍", key="up_feedback_main", help="Submit positive feedback"):
             log_feedback(active_messages[-2]["content"], active_messages[-1]["content"], 5)
             st.toast("Feedback logged!", icon="✨")
     with col_f2:
-        if st.button("👎", key="down_feedback_main"):
+        if st.button("👎", key="down_feedback_main", help="Submit negative feedback"):
             log_feedback(active_messages[-2]["content"], active_messages[-1]["content"], 1)
             st.toast("Feedback logged!", icon="📝")
 
 # Suggested Topic Chips container aligned on bottom right
-st.markdown("<div style='margin-top: 24px; margin-bottom: 8px; font-size:11px; color:#8e887d; font-weight:700; letter-spacing:1px; text-transform:uppercase;'>Action Presets</div>", unsafe_allow_html=True)
+st.markdown("<div role='heading' aria-level='2' style='margin-top: 24px; margin-bottom: 8px; font-size:11px; color:#8e887d; font-weight:700; letter-spacing:1px; text-transform:uppercase;'>Action Presets</div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3 = st.columns(3)
 
 # Preset actions swap matching active page route
@@ -243,15 +246,15 @@ else:
     preset_3_text, preset_3_val = "Deduction Limits", "What is the maximum standard deduction and Section 80D limits?"
 
 with col_chip1:
-    if st.button(preset_1_text, key="btn_chip_1"):
+    if st.button(preset_1_text, key="btn_chip_1", help=f"Ask preset query: {preset_1_val}"):
         active_messages.append({"role": "user", "content": preset_1_val})
         st.rerun()
 with col_chip2:
-    if st.button(preset_2_text, key="btn_chip_2"):
+    if st.button(preset_2_text, key="btn_chip_2", help=f"Ask preset query: {preset_2_val}"):
         active_messages.append({"role": "user", "content": preset_2_val})
         st.rerun()
 with col_chip3:
-    if st.button(preset_3_text, key="btn_chip_3"):
+    if st.button(preset_3_text, key="btn_chip_3", help=f"Ask preset query: {preset_3_val}"):
         active_messages.append({"role": "user", "content": preset_3_val})
         st.rerun()
 

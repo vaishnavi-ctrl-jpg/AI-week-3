@@ -54,3 +54,58 @@ def test_styles_sheet_contains_css():
     assert ".stApp" in CUSTOM_CSS
     assert ".shimmer-text" in CUSTOM_CSS
     assert ".logo-container" in CUSTOM_CSS
+
+def test_sanitize_csv_value():
+    """
+    Verifies that sanitize_csv_value properly escapes formula characters to mitigate CSV injection.
+    """
+    from src.gcp_services import sanitize_csv_value
+    assert sanitize_csv_value("normal value") == "normal value"
+    assert sanitize_csv_value("=SUM(A1:A5)") == "'=SUM(A1:A5)"
+    assert sanitize_csv_value("+value") == "'+value"
+    assert sanitize_csv_value("-value") == "'-value"
+    assert sanitize_csv_value("@value") == "'@value"
+    assert sanitize_csv_value("") == ""
+    assert sanitize_csv_value(None) is None
+
+def test_tax_calculation_negative_values():
+    """
+    Verifies that negative income results in zero tax under both regimes.
+    """
+    assert calculate_tax_old_regime(-1000.0) == 0.0
+    assert calculate_tax_new_regime(-1000.0) == 0.0
+
+def test_tax_calculation_old_regime_large_income():
+    """
+    Tests old regime calculation slabs for high incomes.
+    For standard deductions (80C=150k, 80D=25k, Std=50k, total 225k ded),
+    Income = 1,225,000 => Taxable = 1,000,000.
+    Slabs: 2.5L-5L (12.5k), 5L-10L (100k) => 112.5k + 4% = 117,000
+    """
+    tax = calculate_tax_old_regime(1225000.0)
+    assert abs(tax - 117000.0) < 0.01
+
+def test_record_feedback_local_write(tmp_path, monkeypatch):
+    """
+    Tests that record_feedback writes logs securely to the CSV file.
+    """
+    import csv
+    import os
+    import src.gcp_services
+    
+    # Use monkeypatch to redirect feedback_log.csv to tmp_path
+    test_csv = tmp_path / "feedback_log.csv"
+    monkeypatch.setattr(src.gcp_services, "FEEDBACK_FILE_PATH", str(test_csv))
+    
+    src.gcp_services.record_feedback("=SUM(1,2)", "Check response", 5)
+    
+    assert test_csv.exists()
+    with open(test_csv, mode="r", encoding="utf-8") as f:
+        reader = list(csv.reader(f))
+        # Header + 1 data row
+        assert len(reader) == 2
+        # Verify sanitization prefix is written
+        assert reader[1][1] == "'=SUM(1,2)"
+
+
+

@@ -8,6 +8,8 @@ try:
 except ImportError:
     GCP_SUPPORT = False
 
+FEEDBACK_FILE_PATH = "feedback_log.csv"
+
 def log_to_google_cloud(log_name: str, message: dict) -> bool:
     """
     Log structural conversation feedback to Google Cloud Logging service.
@@ -25,15 +27,29 @@ def log_to_google_cloud(log_name: str, message: dict) -> bool:
             pass
     return False
 
+def sanitize_csv_value(val: str) -> str:
+    """
+    Sanitize values to prevent CSV Injection / Formula Injection vulnerability.
+    """
+    if not val:
+        return val
+    # If the value starts with formula characters, prefix it with a single quote to prevent execution in Excel
+    if val[0] in ('=', '+', '-', '@', '\t', '\r'):
+        return "'" + val
+    return val
+
 def record_feedback(query: str, response: str, score: int):
     """
     Logs user rating feedback. Attempts GCP Cloud Logging, then writes to local CSV.
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sanitized_query = sanitize_csv_value(query)
+    sanitized_response = sanitize_csv_value(response)
+    
     log_data = {
         "timestamp": timestamp,
-        "query": query,
-        "response": response,
+        "query": sanitized_query,
+        "response": sanitized_response,
         "score": score
     }
     
@@ -41,10 +57,11 @@ def record_feedback(query: str, response: str, score: int):
     gcp_logged = log_to_google_cloud("financeguru-feedback", log_data)
     
     # Fallback/Dual write to local audit file
-    file_path = "feedback_log.csv"
+    file_path = FEEDBACK_FILE_PATH
     file_exists = os.path.exists(file_path)
     with open(file_path, mode="a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         if not file_exists:
             writer.writerow(["Timestamp", "User Query", "Bot Response", "Score (1-5)", "GCP Logged"])
-        writer.writerow([timestamp, query, response, score, "TRUE" if gcp_logged else "FALSE"])
+        writer.writerow([timestamp, sanitized_query, sanitized_response, score, "TRUE" if gcp_logged else "FALSE"])
+
